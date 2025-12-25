@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Электронная очередь</title>
+<title>Система электронной очереди</title>
 
 <style>
 body {
@@ -10,6 +10,7 @@ body {
   font-family: Arial, sans-serif;
 }
 
+/* Верхнее меню */
 nav {
   background: #222;
   padding: 10px;
@@ -23,13 +24,14 @@ nav button {
   cursor: pointer;
 }
 
+/* Экраны */
 .screen {
   display: none;
   height: calc(100vh - 60px);
   padding: 20px;
 }
 
-.active {
+.screen.active {
   display: flex;
 }
 
@@ -39,12 +41,23 @@ nav button {
   align-items: center;
 }
 
+/* Кнопка fullscreen */
+.fullscreen-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Экран 1 */
 .big {
   font-size: 80px;
   margin: 20px;
 }
 
-/* TV */
+/* Экран ТВ */
 .tv {
   background: black;
   color: white;
@@ -57,8 +70,8 @@ nav button {
 }
 
 .call {
-  color: yellow;
   font-size: 50px;
+  color: yellow;
 }
 
 .current {
@@ -66,7 +79,7 @@ nav button {
   color: red;
 }
 
-/* Operator */
+/* Экран оператора */
 .list button {
   width: 100%;
   padding: 15px;
@@ -86,6 +99,7 @@ nav button {
 
 <!-- ЭКРАН 1 -->
 <div id="screen1" class="screen center active">
+  <button class="fullscreen-btn" onclick="goFullscreen('screen1')">⛶ На весь экран</button>
   <h1>Получение талона</h1>
   <div id="ticketNumber" class="big">—</div>
   <button onclick="getTicket()">Получить талон</button>
@@ -93,6 +107,8 @@ nav button {
 
 <!-- ЭКРАН 2 -->
 <div id="screen2" class="screen tv">
+  <button class="fullscreen-btn" onclick="goFullscreen('screen2')">⛶ На весь экран</button>
+
   <div>
     <h1>Очередь</h1>
     <div id="queue" class="queue"></div>
@@ -106,6 +122,7 @@ nav button {
 
 <!-- ЭКРАН 3 -->
 <div id="screen3" class="screen">
+  <button class="fullscreen-btn" onclick="goFullscreen('screen3')">⛶ На весь экран</button>
   <h1>Вызов талона</h1>
   <div id="tickets" class="list"></div>
 </div>
@@ -119,9 +136,17 @@ function save() {
   localStorage.setItem("current", current);
 }
 
+/* Переключение экранов */
 function showScreen(n) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById("screen" + n).classList.add("active");
+}
+
+/* Fullscreen */
+function goFullscreen(id) {
+  const el = document.getElementById(id);
+  if (el.requestFullscreen) el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
 }
 
 /* Экран 1 */
@@ -132,7 +157,7 @@ function getTicket() {
   document.getElementById("ticketNumber").innerText = num;
 }
 
-/* Обновление экрана 2 и 3 */
+/* Обновление ТВ и оператора */
 setInterval(() => {
   tickets = JSON.parse(localStorage.getItem("tickets")) || [];
   current = localStorage.getItem("current") || "—";
@@ -140,10 +165,10 @@ setInterval(() => {
   document.getElementById("queue").innerText = tickets.join(" ");
   document.getElementById("current").innerText = current;
 
-  let list = document.getElementById("tickets");
+  const list = document.getElementById("tickets");
   list.innerHTML = "";
   tickets.forEach(t => {
-    let btn = document.createElement("button");
+    const btn = document.createElement("button");
     btn.innerText = t;
     btn.onclick = () => {
       current = t;
