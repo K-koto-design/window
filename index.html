@@ -1,15 +1,159 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Система очереди</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body class="center">
-  <h1>Система электронной очереди</h1>
+<meta charset="UTF-8">
+<title>Электронная очередь</title>
 
-  <a href="ticket.html" class="btn">Экран 1 — Выдача талона</a>
-  <a href="tv.html" class="btn">Экран 2 — Телевизор</a>
-  <a href="operator.html" class="btn">Экран 3 — Оператор</a>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+nav {
+  background: #222;
+  padding: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+nav button {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.screen {
+  display: none;
+  height: calc(100vh - 60px);
+  padding: 20px;
+}
+
+.active {
+  display: flex;
+}
+
+.center {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.big {
+  font-size: 80px;
+  margin: 20px;
+}
+
+/* TV */
+.tv {
+  background: black;
+  color: white;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.queue {
+  font-size: 40px;
+}
+
+.call {
+  color: yellow;
+  font-size: 50px;
+}
+
+.current {
+  font-size: 120px;
+  color: red;
+}
+
+/* Operator */
+.list button {
+  width: 100%;
+  padding: 15px;
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <button onclick="showScreen(1)">Экран 1 — Талон</button>
+  <button onclick="showScreen(2)">Экран 2 — ТВ</button>
+  <button onclick="showScreen(3)">Экран 3 — Оператор</button>
+</nav>
+
+<!-- ЭКРАН 1 -->
+<div id="screen1" class="screen center active">
+  <h1>Получение талона</h1>
+  <div id="ticketNumber" class="big">—</div>
+  <button onclick="getTicket()">Получить талон</button>
+</div>
+
+<!-- ЭКРАН 2 -->
+<div id="screen2" class="screen tv">
+  <div>
+    <h1>Очередь</h1>
+    <div id="queue" class="queue"></div>
+  </div>
+
+  <div>
+    <div class="call">Подойдите</div>
+    <div id="current" class="current">—</div>
+  </div>
+</div>
+
+<!-- ЭКРАН 3 -->
+<div id="screen3" class="screen">
+  <h1>Вызов талона</h1>
+  <div id="tickets" class="list"></div>
+</div>
+
+<script>
+let tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+let current = localStorage.getItem("current") || "—";
+
+function save() {
+  localStorage.setItem("tickets", JSON.stringify(tickets));
+  localStorage.setItem("current", current);
+}
+
+function showScreen(n) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById("screen" + n).classList.add("active");
+}
+
+/* Экран 1 */
+function getTicket() {
+  let num = "A" + String(tickets.length + 1).padStart(3, "0");
+  tickets.push(num);
+  save();
+  document.getElementById("ticketNumber").innerText = num;
+}
+
+/* Обновление экрана 2 и 3 */
+setInterval(() => {
+  tickets = JSON.parse(localStorage.getItem("tickets")) || [];
+  current = localStorage.getItem("current") || "—";
+
+  document.getElementById("queue").innerText = tickets.join(" ");
+  document.getElementById("current").innerText = current;
+
+  let list = document.getElementById("tickets");
+  list.innerHTML = "";
+  tickets.forEach(t => {
+    let btn = document.createElement("button");
+    btn.innerText = t;
+    btn.onclick = () => {
+      current = t;
+      tickets = tickets.filter(x => x !== t);
+      save();
+    };
+    list.appendChild(btn);
+  });
+}, 500);
+</script>
+
 </body>
 </html>
