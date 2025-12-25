@@ -3,70 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Очередь Pro</title>
+    <title>Облачная Очередь</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    
     <style>
-        :root {
-            --primary: #2563eb;
-            --bg: #f8fafc;
-            --text: #1e293b;
-            --accent: #e11d48;
-        }
-
-        body, html {
-            margin: 0; padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            height: 100%;
-            overflow: hidden;
-        }
-
-        /* Исправленная навигация */
-        .nav {
-            position: fixed; top: 0; width: 100%; height: 70px;
-            background: #fff; border-bottom: 1px solid #e2e8f0;
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 0 20px; box-sizing: border-box; z-index: 100;
-        }
+        :root { --primary: #2563eb; --bg: #f1f5f9; --text: #0f172a; --accent: #ef4444; }
+        body, html { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); height: 100%; overflow: hidden; }
         
+        /* Навигация */
+        .nav { position: fixed; top: 0; width: 100%; height: 70px; background: #fff; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-sizing: border-box; z-index: 100; }
         .nav-tabs { display: flex; gap: 10px; }
-        
-        .nav button {
-            padding: 12px 18px; border: none; background: #f1f5f9;
-            border-radius: 8px; cursor: pointer; font-weight: 600; 
-            color: #64748b; font-size: 0.9rem; transition: 0.2s;
-        }
-        
+        .nav button { padding: 12px 18px; border: none; background: #f1f5f9; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b; }
         .nav button.active { background: var(--primary); color: white; }
+        .fullscreen-btn { background: #1e293b !important; color: white !important; }
 
-        .fullscreen-btn {
-            background: #334155 !important;
-            color: white !important;
-            display: flex; align-items: center; gap: 5px;
-        }
-
+        /* Экраны */
         .screen { display: none; height: 100vh; width: 100vw; box-sizing: border-box; text-align: center; padding-top: 70px; }
         .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
-        /* Экран 1: Выдача */
-        .ticket-card { background: #fff; padding: 40px; border-radius: 25px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 80%; max-width: 400px; }
-        .btn-main { background: var(--primary); color: #fff; border: none; padding: 20px; border-radius: 12px; font-size: 1.4rem; cursor: pointer; width: 100%; transition: 0.2s; }
-        #last-ticket { font-size: 5rem; font-weight: 900; margin-top: 20px; color: var(--primary); }
+        /* ТВ Табло */
+        .tv-container { display: flex; width: 95%; height: 85%; gap: 25px; margin-top: -30px; }
+        .tv-col { flex: 1; background: #fff; border-radius: 24px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .tv-col h2 { font-size: 2.5rem; color: #64748b; margin-top: 0; border-bottom: 4px solid #f1f5f9; padding-bottom: 15px; }
+        .ticket-list { list-style: none; padding: 0; font-size: 6rem; font-weight: 800; margin: auto 0; }
+        .calling { color: var(--accent); animation: blink 1s infinite; font-size: 10rem; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.1; } }
 
-        /* Экран 2: ТВ */
-        .tv-container { display: flex; width: 95%; height: 80%; gap: 20px; margin-top: -40px; }
-        .tv-col { flex: 1; background: #fff; border-radius: 20px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .tv-col h2 { font-size: 2.5rem; color: #94a3b8; margin-bottom: 20px; border-bottom: 4px solid #f1f5f9; }
-        .ticket-list { list-style: none; padding: 0; font-size: 5rem; font-weight: bold; }
-        .calling { color: var(--accent); animation: blink 0.8s infinite; font-size: 9rem; }
-        
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.1; } 100% { opacity: 1; } }
+        /* Оператор */
+        .operator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; width: 90%; max-height: 60vh; overflow-y: auto; }
+        .op-ticket { background: #fff; border: 2px solid var(--primary); padding: 20px; border-radius: 12px; cursor: pointer; font-weight: bold; font-size: 1.5rem; }
 
-        /* Экран 3: Оператор */
-        .operator-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 15px; width: 90%; max-height: 50vh; overflow-y: auto; padding: 10px; }
-        .op-ticket { background: #fff; border: 2px solid var(--primary); padding: 15px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1.2rem; }
-        .op-ticket:hover { background: var(--primary); color: white; }
-
+        /* Скрытие меню при Fullscreen */
         :fullscreen .nav { display: none; }
         :fullscreen .screen { padding-top: 0; }
     </style>
@@ -75,18 +43,18 @@
 
     <nav class="nav">
         <div class="nav-tabs">
-            <button onclick="showScreen('client')" id="btn-client">Клиент</button>
-            <button onclick="showScreen('tv')" id="btn-tv">ТВ Табло</button>
-            <button onclick="showScreen('operator')" id="btn-operator">Оператор</button>
+            <button onclick="showScreen('client')" id="btn-client">Выдача</button>
+            <button onclick="showScreen('tv')" id="btn-tv">Телевизор</button>
+            <button onclick="showScreen('operator')" id="btn-operator">Оператор (iPad)</button>
         </div>
         <button class="fullscreen-btn" onclick="toggleFullScreen()">⛶ На весь экран</button>
     </nav>
 
     <section id="screen-client" class="screen">
-        <div class="ticket-card">
-            <h2>Электронная очередь</h2>
-            <button class="btn-main" onclick="createTicket()">Получить талон</button>
-            <div id="last-ticket">---</div>
+        <div style="background:#fff; padding:50px; border-radius:30px; box-shadow:0 20px 40px rgba(0,0,0,0.1)">
+            <h1 style="font-size:2rem">Возьмите талон</h1>
+            <button onclick="createTicket()" style="background:var(--primary); color:white; border:none; padding:25px 50px; border-radius:15px; font-size:2rem; cursor:pointer">ПЕЧАТЬ</button>
+            <div id="last-ticket" style="font-size:6rem; font-weight:900; color:var(--primary); margin-top:20px">---</div>
         </div>
     </section>
 
@@ -104,113 +72,95 @@
     </section>
 
     <section id="screen-operator" class="screen">
-        <h1>Вызов клиента</h1>
+        <h1>Пульт вызова</h1>
         <div id="operator-list" class="operator-grid"></div>
-        <button onclick="clearAll()" style="margin-top: 30px; background: none; border: none; color: #94a3b8; cursor: pointer;">Сбросить данные</button>
+        <button onclick="clearAll()" style="margin-top:50px; opacity:0.2">Сбросить очередь</button>
     </section>
 
     <script>
-        let tickets = JSON.parse(localStorage.getItem('tickets')) || [];
-        let currentCalling = localStorage.getItem('currentCalling') || "";
-        let removeTimeout = null;
+        // Твои настройки Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFwibsJJb7VCW8ECspVt7-TnbQ144zNPU",
+            authDomain: "window-5c272.firebaseapp.com",
+            databaseURL: "https://window-5c272-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "window-5c272",
+            storageBucket: "window-5c272.firebasestorage.app",
+            messagingSenderId: "685445135840",
+            appId: "1:685445135840:web:efa8a3b43fad4310c67f85",
+            measurementId: "G-9KPZ0YL805"
+        };
 
-        function showScreen(screenId) {
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database().ref('queue_system');
+
+        let tickets = [];
+        let currentCalling = "";
+
+        // Слушаем изменения в облаке
+        db.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            tickets = data.tickets || [];
+            currentCalling = data.currentCalling || "";
+            const callTime = data.callTime || 0;
+
+            // Логика исчезновения через 30 секунд
+            if (currentCalling && callTime) {
+                const now = Date.now();
+                const diff = now - callTime;
+                if (diff > 30000) {
+                    db.update({ currentCalling: "", callTime: 0 });
+                } else {
+                    setTimeout(() => {
+                        db.update({ currentCalling: "", callTime: 0 });
+                    }, 30000 - diff);
+                }
+            }
+            updateUI();
+        });
+
+        function showScreen(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-            document.getElementById('screen-' + screenId).classList.add('active');
-            const btn = document.getElementById('btn-' + screenId);
-            if(btn) btn.classList.add('active');
-            updateUI();
-        }
-
-        function toggleFullScreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen();
-            } else {
-                document.exitFullscreen();
-            }
+            document.getElementById('screen-' + id).classList.add('active');
+            document.getElementById('btn-' + id).classList.add('active');
         }
 
         function createTicket() {
-            const nextNum = tickets.length > 0 ? tickets[tickets.length - 1] + 1 : 100;
-            tickets.push(nextNum);
-            save();
+            const nextNum = tickets.length > 0 ? Math.max(...tickets) + 1 : 100;
+            const newTickets = [...tickets, nextNum];
+            db.update({ tickets: newTickets });
             document.getElementById('last-ticket').innerText = nextNum;
-            updateUI();
         }
 
         function callTicket(num) {
-            currentCalling = num;
-            tickets = tickets.filter(t => t !== num);
-            
-            // Запоминаем время вызова для таймера
-            localStorage.setItem('callTimestamp', Date.now());
-            
-            save();
-            updateUI();
-            
+            const filtered = tickets.filter(t => t !== num);
+            db.update({
+                tickets: filtered,
+                currentCalling: num,
+                callTime: Date.now()
+            });
+            // Голос только на устройстве оператора или ТВ (смотря где включен звук)
             const msg = new SpeechSynthesisUtterance(`Номер ${num}`);
             msg.lang = 'ru-RU';
             window.speechSynthesis.speak(msg);
         }
 
-        function save() {
-            localStorage.setItem('tickets', JSON.stringify(tickets));
-            localStorage.setItem('currentCalling', currentCalling);
-        }
-
         function updateUI() {
-            const tvQueue = document.getElementById('tv-queue');
-            const tvCall = document.getElementById('tv-call');
-            const opList = document.getElementById('operator-list');
-
-            if(tvQueue) tvQueue.innerHTML = tickets.slice(0, 3).map(t => `<li>${t}</li>`).join('');
-            if(tvCall) tvCall.innerHTML = currentCalling ? `<li>${currentCalling}</li>` : '';
-            if(opList) opList.innerHTML = tickets.map(t => `<div class="op-ticket" onclick="callTicket(${t})">${t}</div>`).join('');
-            
-            checkExpiry();
+            document.getElementById('tv-queue').innerHTML = tickets.slice(0, 3).map(t => `<li>${t}</li>`).join('');
+            document.getElementById('tv-call').innerHTML = currentCalling ? `<li>${currentCalling}</li>` : '';
+            document.getElementById('operator-list').innerHTML = tickets.map(t => 
+                `<div class="op-ticket" onclick="callTicket(${t})">${t}</div>`
+            ).join('');
         }
 
-        // Логика исчезновения через 30 секунд
-        function checkExpiry() {
-            if (!currentCalling) return;
-
-            const callTime = localStorage.getItem('callTimestamp');
-            const now = Date.now();
-            const diff = now - callTime;
-
-            if (diff >= 30000) {
-                currentCalling = "";
-                save();
-                updateUI();
-            } else {
-                // Устанавливаем таймер на остаток времени
-                if (removeTimeout) clearTimeout(removeTimeout);
-                removeTimeout = setTimeout(() => {
-                    currentCalling = "";
-                    save();
-                    updateUI();
-                }, 30000 - diff);
-            }
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+            else document.exitFullscreen();
         }
 
         function clearAll() {
-            if(confirm("Очистить всё?")) {
-                localStorage.clear();
-                tickets = [];
-                currentCalling = "";
-                location.reload();
-            }
+            if(confirm("Очистить все данные?")) db.set({ tickets: [], currentCalling: "", callTime: 0 });
         }
-
-        window.addEventListener('storage', () => {
-            tickets = JSON.parse(localStorage.getItem('tickets')) || [];
-            currentCalling = localStorage.getItem('currentCalling') || "";
-            updateUI();
-        });
-
-        // Проверять таймер каждую секунду на случай, если вкладка была неактивна
-        setInterval(checkExpiry, 1000);
 
         showScreen('client');
     </script>
